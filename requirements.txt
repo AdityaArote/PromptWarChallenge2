@@ -1,0 +1,10 @@
+npm install -g uipro-cli
+uipro init --ai antigravity 
+
+pip install code-review-graph                     # or: pipx install code-review-graph
+code-review-graph install          # auto-detects and configures all supported platforms
+code-review-graph build            # parse your codebase
+code-review-graph visualize        # Generate interactive HTML graph visualization
+
+
+npx get-shit-done-cc@latest

@@ -1,0 +1,505 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary)}
+.tabs{display:flex;gap:4px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:20px;overflow-x:auto;padding-bottom:0}
+.tab{padding:8px 14px;font-size:13px;cursor:pointer;border-radius:6px 6px 0 0;color:var(--color-text-secondary);white-space:nowrap;border:0.5px solid transparent;border-bottom:none;transition:all .15s}
+.tab.active{color:var(--color-text-primary);font-weight:500;background:var(--color-background-secondary);border-color:var(--color-border-tertiary)}
+.tab:hover:not(.active){color:var(--color-text-primary);background:var(--color-background-secondary)}
+.section{display:none}.section.active{display:block}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;line-height:1.6}
+.badge-purple{background:#EEEDFE;color:#3C3489}
+.badge-teal{background:#E1F5EE;color:#0F6E56}
+.badge-amber{background:#FAEEDA;color:#633806}
+.badge-coral{background:#FAECE7;color:#712B13}
+.badge-blue{background:#E6F1FB;color:#0C447C}
+.badge-green{background:#EAF3DE;color:#27500A}
+@media(prefers-color-scheme:dark){
+  .badge-purple{background:#26215C;color:#CCC9F4}
+  .badge-teal{background:#04342C;color:#8FD9BF}
+  .badge-amber{background:#412402;color:#F9C875}
+  .badge-coral{background:#4A1B0C;color:#F2A07A}
+  .badge-blue{background:#042C53;color:#85B7EB}
+  .badge-green{background:#173404;color:#B0D87A}
+}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.card-accent{border-left:3px solid #534AB7}
+.card-accent-teal{border-left:3px solid #0F6E56}
+.card-accent-amber{border-left:3px solid #854F0B}
+.card-accent-coral{border-left:3px solid #993C1D}
+.card-accent-blue{border-left:3px solid #185FA5}
+.story-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.story-text{font-size:14px;line-height:1.6;color:var(--color-text-primary)}
+.so-that{font-size:13px;color:var(--color-text-secondary);margin-top:4px}
+.critical-banner{background:linear-gradient(135deg,#EEEDFE,#E1F5EE);border:0.5px solid #AFA9EC;border-radius:12px;padding:16px;margin-bottom:16px}
+@media(prefers-color-scheme:dark){.critical-banner{background:linear-gradient(135deg,#26215C,#04342C);border-color:#534AB7}}
+.critical-banner h3{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px}
+.critical-banner p{font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+.feature-card{background:var(--color-background-secondary);border-radius:8px;padding:12px 14px}
+.feature-card h4{font-size:13px;font-weight:500;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.feature-card p{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.mvp-tag{font-size:10px;background:#E1F5EE;color:#0F6E56;padding:2px 6px;border-radius:4px;font-weight:500}
+@media(prefers-color-scheme:dark){.mvp-tag{background:#04342C;color:#8FD9BF}}
+.tech-row{display:grid;grid-template-columns:80px 1fr 1fr;gap:8px;align-items:start;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px}
+.tech-row:last-child{border-bottom:none}
+.tech-name{font-weight:500;font-size:13px}
+.tech-role{color:var(--color-text-secondary);line-height:1.5}
+.tech-why{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.timeline{position:relative}
+.tl-item{display:flex;gap:12px;margin-bottom:0}
+.tl-left{display:flex;flex-direction:column;align-items:center;min-width:52px}
+.tl-time{font-size:11px;font-weight:500;color:var(--color-text-secondary);white-space:nowrap}
+.tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin:4px 0 0}
+.tl-line{flex:1;width:1px;background:var(--color-border-tertiary)}
+.tl-body{flex:1;padding-bottom:16px}
+.tl-title{font-size:13px;font-weight:500;margin-bottom:4px}
+.tl-tasks{font-size:12px;color:var(--color-text-secondary);line-height:1.8}
+.tl-tasks li{list-style:none;padding-left:12px;position:relative}
+.tl-tasks li::before{content:"→";position:absolute;left:0;color:var(--color-text-tertiary)}
+.score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.score-card{background:var(--color-background-secondary);border-radius:8px;padding:12px 14px}
+.score-card h4{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.score-card ul{font-size:12px;color:var(--color-text-primary);line-height:1.8}
+.score-card ul li{list-style:none;padding-left:12px;position:relative}
+.score-card ul li::before{content:"✓";position:absolute;left:0;color:#0F6E56;font-size:10px}
+.fs-tree{font-family:var(--font-mono);font-size:12px;line-height:1.9;background:var(--color-background-secondary);border-radius:8px;padding:14px 16px;color:var(--color-text-primary)}
+.fs-dir{color:#534AB7;font-weight:500}
+.fs-file{color:var(--color-text-secondary)}
+.fs-comment{color:var(--color-text-tertiary)}
+.app-hero{background:var(--color-background-secondary);border-radius:12px;padding:20px;margin-bottom:20px;text-align:center}
+.app-name{font-size:24px;font-weight:500;letter-spacing:-.5px;margin-bottom:6px}
+.app-tagline{font-size:14px;color:var(--color-text-secondary);line-height:1.6;max-width:480px;margin:0 auto 12px}
+.app-badges{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+h2{font-size:15px;font-weight:500;margin-bottom:12px;color:var(--color-text-primary)}
+h3{font-size:13px;font-weight:500;margin-bottom:8px;color:var(--color-text-primary)}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:16px 0}
+.win-box{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.win-num{font-size:20px;font-weight:500;min-width:28px;color:#534AB7}
+.win-text h4{font-size:13px;font-weight:500;margin-bottom:2px}
+.win-text p{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+</style>
+
+<div style="padding:16px 0">
+<h2 class="sr-only">CivicPath hackathon strategy — app idea, user stories, features, tech stack, timeline, and scoring guide</h2>
+
+<div class="app-hero">
+  <div class="app-name">CivicPath</div>
+  <div class="app-tagline">An AI-powered interactive civic journey that teaches every voter exactly how elections work — visually, conversationally, and in their own language.</div>
+  <div class="app-badges">
+    <span class="badge badge-purple">Election Education PWA</span>
+    <span class="badge badge-teal">AI Assistant</span>
+    <span class="badge badge-blue">GCP + Supabase</span>
+    <span class="badge badge-amber">Hackathon MVP</span>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" onclick="switchTab('stories')">User Stories</div>
+  <div class="tab" onclick="switchTab('features')">Features</div>
+  <div class="tab" onclick="switchTab('techstack')">Tech Stack</div>
+  <div class="tab" onclick="switchTab('filestructure')">File Structure</div>
+  <div class="tab" onclick="switchTab('timeline')">2-Hr Timeline</div>
+  <div class="tab" onclick="switchTab('scoring')">Scoring Edge</div>
+</div>
+
+<!-- USER STORIES -->
+<div class="section active" id="stories">
+  <h2>5 User Stories</h2>
+
+  <div class="card card-accent">
+    <div class="story-label">Story 1 — First-time voter</div>
+    <div class="story-text">As a first-time voter, I want a guided, step-by-step visual walkthrough of the entire election process — from registration to result — so that I never feel confused or miss a critical deadline.</div>
+    <div class="so-that"><span class="badge badge-purple">CRITICAL STORY</span> — Most users are exactly this persona. Solving this wins the demo.</div>
+  </div>
+
+  <div class="card card-accent-teal">
+    <div class="story-label">Story 2 — Civic educator</div>
+    <div class="story-text">As a civic educator, I want to share an embeddable, shareable link to specific election phases so that I can use CivicPath as a classroom tool without any setup.</div>
+    <div class="so-that" style="margin-top:4px"><span class="badge badge-teal">High Impact</span></div>
+  </div>
+
+  <div class="card card-accent-amber">
+    <div class="story-label">Story 3 — NRI / overseas voter</div>
+    <div class="story-text">As an overseas citizen, I want to ask a conversational AI assistant specific questions about absentee/postal voting timelines so that I don't lose my vote to a missed deadline.</div>
+    <div class="so-that" style="margin-top:4px"><span class="badge badge-amber">AI differentiation</span></div>
+  </div>
+
+  <div class="card card-accent-coral">
+    <div class="story-label">Story 4 — Youth voter</div>
+    <div class="story-text">As a young voter, I want a gamified quiz about election civics with instant explanations so that learning feels engaging and I can track my progress over time.</div>
+    <div class="so-that" style="margin-top:4px"><span class="badge badge-coral">Engagement + retention</span></div>
+  </div>
+
+  <div class="card card-accent-blue">
+    <div class="story-label">Story 5 — Accessibility-first user</div>
+    <div class="story-text">As a user with low digital literacy or a visual impairment, I want the entire experience to work via keyboard navigation and screen reader so that CivicPath is truly inclusive.</div>
+    <div class="so-that" style="margin-top:4px"><span class="badge badge-blue">Evaluation criterion: Accessibility</span></div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="critical-banner">
+    <h3>Most Critical Story → Story 1 (First-time voter journey)</h3>
+    <p>This is the core demo story. If a judge sees a confused voter land on the app and leave knowing every step with a personalized timeline — that's the win. Everything else is additive. Build this first, deeply, before touching anything else.</p>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="section" id="features">
+  <h2>Key Features — MVP Prioritized</h2>
+
+  <h3 style="margin-bottom:10px">🟢 Must-build (Core MVP)</h3>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4><span class="badge badge-teal">P0</span> Interactive Timeline</h4>
+      <p>Visual step-by-step election journey. Click any phase to deep-dive. Animated progress tracker. Personalized by voter type.</p>
+      <div style="margin-top:6px"><span class="mvp-tag">Gemini + Supabase</span></div>
+    </div>
+    <div class="feature-card">
+      <h4><span class="badge badge-teal">P0</span> AI Chat Assistant</h4>
+      <p>Gemini 1.5 Flash answering election questions in plain language. Context-aware of which step the user is currently viewing.</p>
+      <div style="margin-top:6px"><span class="mvp-tag">Vertex AI + Stitch</span></div>
+    </div>
+    <div class="feature-card">
+      <h4><span class="badge badge-teal">P0</span> Voter Registration Check</h4>
+      <p>Users enter state/region to get personalized deadlines, polling station info, and document checklist.</p>
+      <div style="margin-top:6px"><span class="mvp-tag">GCP + Supabase DB</span></div>
+    </div>
+    <div class="feature-card">
+      <h4><span class="badge badge-teal">P0</span> Civic Quiz Module</h4>
+      <p>Gamified 5-question quiz per election phase. Score tracked per user. Streak counter. Instant AI explanation on wrong answers.</p>
+      <div style="margin-top:6px"><span class="mvp-tag">Supabase Auth</span></div>
+    </div>
+  </div>
+
+  <h3 style="margin-bottom:10px">🟡 Should-build (Differentiation)</h3>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4><span class="badge badge-amber">P1</span> Deadline Alerts</h4>
+      <p>Supabase Realtime push notifications for upcoming registration/voting deadlines.</p>
+    </div>
+    <div class="feature-card">
+      <h4><span class="badge badge-amber">P1</span> Shareable Journey Cards</h4>
+      <p>Auto-generated OG image per election phase. One-click share to WhatsApp/X. Deep link to exact step.</p>
+    </div>
+    <div class="feature-card">
+      <h4><span class="badge badge-amber">P1</span> Multilingual Mode</h4>
+      <p>Gemini translates all content on-the-fly. Toggle language selector. Accessibility score booster.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-bottom:10px">🔴 Nice-to-have (Polish)</h3>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4><span class="badge badge-coral">P2</span> Progress Dashboard</h4>
+      <p>User profile with completed steps, quiz scores, and next actions. Motivational streak counter.</p>
+    </div>
+    <div class="feature-card">
+      <h4><span class="badge badge-coral">P2</span> Myth Busters Module</h4>
+      <p>AI debunks common election myths with sources. Cards format. Shareable.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<div class="section" id="techstack">
+  <h2>Tech Stack Rationale</h2>
+
+  <div class="card" style="margin-bottom:16px;background:var(--color-background-secondary)">
+    <div class="tech-row" style="font-weight:500;font-size:12px;color:var(--color-text-secondary);padding-top:0">
+      <div>Tool</div><div>What you use it for</div><div>Why it wins points</div>
+    </div>
+    <div class="tech-row">
+      <div class="tech-name" style="color:#185FA5">GCP / Vertex AI</div>
+      <div class="tech-role">Gemini 1.5 Flash for the AI chat assistant, content generation, quiz explanations, multilingual translation. Cloud Run for the API container.</div>
+      <div class="tech-why">Directly hits the <strong>Google Services</strong> evaluation criterion. Use Gemini API, Cloud Run, and Cloud Logging for max points.</div>
+    </div>
+    <div class="tech-row">
+      <div class="tech-name" style="color:#534AB7">Supabase</div>
+      <div class="tech-role">Postgres DB for election content + user quiz scores. Auth (anonymous + email). Realtime for live deadline alerts. Edge Functions for server-side logic.</div>
+      <div class="tech-why">Zero-budget, production-ready backend in minutes. RLS = Security points. Edge functions = Efficiency points.</div>
+    </div>
+    <div class="tech-row">
+      <div class="tech-name" style="color:#0F6E56">Antigravity</div>
+      <div class="tech-role">Animation + interaction layer for the interactive timeline. Micro-animations on phase completion. Entrance animations on route change. Smooth parallax on the hero.</div>
+      <div class="tech-why">This is your UX/UI differentiator. Judges remember apps that feel alive. Antigravity makes the timeline feel like a product, not a hackathon demo.</div>
+    </div>
+    <div class="tech-row">
+      <div class="tech-name" style="color:#854F0B">Stitch</div>
+      <div class="tech-role">Data pipeline for ingesting election data (ECI open data, state APIs) into Supabase. ETL job seeded at build time. Webhook trigger on data update.</div>
+      <div class="tech-why">Separates data concerns from app logic. Shows architectural maturity — judges reward this. Also useful for Efficiency scoring.</div>
+    </div>
+    <div class="tech-row">
+      <div class="tech-name" style="color:#3d3d3a">React + Vite</div>
+      <div class="tech-role">Frontend PWA. TypeScript throughout. Vitest for unit tests. Tailwind for utility styling. react-aria for accessibility primitives.</div>
+      <div class="tech-why">TypeScript = Code Quality. Vitest = Testing. react-aria = Accessibility. One framework, all four criteria covered.</div>
+    </div>
+  </div>
+
+  <div class="critical-banner">
+    <h3>Winning architectural pattern: Edge-first, AI-augmented</h3>
+    <p>All AI calls go through a Supabase Edge Function — never directly from the client. This means: (1) API key never exposed = Security points, (2) Response caching per question = Efficiency points, (3) Rate limiting per user = Security + Efficiency. One pattern, four criteria addressed.</p>
+  </div>
+</div>
+
+<!-- FILE STRUCTURE -->
+<div class="section" id="filestructure">
+  <h2>File Structure</h2>
+  <div class="fs-tree">
+<span class="fs-dir">civicpath/</span>
+├── <span class="fs-dir">apps/web/</span>               <span class="fs-comment"># React + Vite PWA</span>
+│   ├── <span class="fs-dir">src/</span>
+│   │   ├── <span class="fs-dir">components/</span>
+│   │   │   ├── <span class="fs-dir">ui/</span>           <span class="fs-comment"># Antigravity-powered atoms</span>
+│   │   │   ├── <span class="fs-dir">timeline/</span>     <span class="fs-comment"># ElectionTimeline, PhaseCard</span>
+│   │   │   ├── <span class="fs-dir">chat/</span>         <span class="fs-comment"># ChatWindow, MessageBubble</span>
+│   │   │   └── <span class="fs-dir">quiz/</span>         <span class="fs-comment"># QuizCard, ScoreBoard</span>
+│   │   ├── <span class="fs-dir">hooks/</span>
+│   │   │   ├── <span class="fs-file">useElectionData.ts</span>
+│   │   │   ├── <span class="fs-file">useGeminiChat.ts</span>
+│   │   │   └── <span class="fs-file">useQuizSession.ts</span>
+│   │   ├── <span class="fs-dir">lib/</span>
+│   │   │   ├── <span class="fs-file">supabase.ts</span>    <span class="fs-comment"># typed client</span>
+│   │   │   ├── <span class="fs-file">gemini.ts</span>     <span class="fs-comment"># Vertex AI wrapper</span>
+│   │   │   └── <span class="fs-file">analytics.ts</span>  <span class="fs-comment"># GCP Cloud Logging</span>
+│   │   ├── <span class="fs-dir">pages/</span>
+│   │   │   ├── <span class="fs-file">Home.tsx</span>       <span class="fs-comment"># Voter type selector</span>
+│   │   │   ├── <span class="fs-file">Journey.tsx</span>   <span class="fs-comment"># CRITICAL: Main timeline</span>
+│   │   │   ├── <span class="fs-file">Quiz.tsx</span>      <span class="fs-comment"># Gamified civic quiz</span>
+│   │   │   └── <span class="fs-file">Chat.tsx</span>      <span class="fs-comment"># AI assistant fullscreen</span>
+│   │   ├── <span class="fs-dir">store/</span>
+│   │   │   └── <span class="fs-file">voterStore.ts</span> <span class="fs-comment"># Zustand: voter profile</span>
+│   │   └── <span class="fs-file">main.tsx</span>
+│   ├── <span class="fs-file">vite.config.ts</span>
+│   └── <span class="fs-file">vitest.config.ts</span>     <span class="fs-comment"># Testing criterion</span>
+│
+├── <span class="fs-dir">supabase/</span>
+│   ├── <span class="fs-dir">migrations/</span>
+│   │   └── <span class="fs-file">001_election_schema.sql</span>
+│   └── <span class="fs-dir">functions/</span>
+│       ├── <span class="fs-dir">gemini-chat/</span>       <span class="fs-comment"># Edge fn: proxies Gemini API</span>
+│       │   └── <span class="fs-file">index.ts</span>       <span class="fs-comment"># Auth check + rate limit</span>
+│       └── <span class="fs-dir">deadline-alert/</span>   <span class="fs-comment"># Scheduled: pushes reminders</span>
+│           └── <span class="fs-file">index.ts</span>
+│
+├── <span class="fs-dir">stitch/</span>
+│   └── <span class="fs-file">ingest_election_data.py</span> <span class="fs-comment"># ETL: ECI → Supabase</span>
+│
+├── <span class="fs-dir">infra/</span>
+│   ├── <span class="fs-file">Dockerfile</span>           <span class="fs-comment"># GCP Cloud Run</span>
+│   └── <span class="fs-file">cloudbuild.yaml</span>     <span class="fs-comment"># CI/CD pipeline</span>
+│
+└── <span class="fs-file">README.md</span>             <span class="fs-comment"># judges read this</span>
+  </div>
+
+  <div style="margin-top:12px;font-size:12px;color:var(--color-text-secondary);line-height:1.8">
+    <strong>Key principle:</strong> Every folder maps to an evaluation criterion. <code>functions/gemini-chat</code> = Security. <code>vitest.config.ts</code> = Testing. <code>lib/analytics.ts</code> = Google Services. Don't leave any criterion un-addressed in the structure.
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div class="section" id="timeline">
+  <h2>2-Hour Hackathon Sprint</h2>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-left">
+        <div class="tl-time">0:00</div>
+        <div class="tl-dot" style="background:#534AB7"></div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-body">
+        <div class="tl-title">Scaffold + Seed (0–15 min)</div>
+        <ul class="tl-tasks">
+          <li><code>npm create vite@latest civicpath -- --template react-ts</code></li>
+          <li>Install: tailwind, zustand, react-router, @supabase/supabase-js, @anthropic-ai/sdk</li>
+          <li>Run <code>supabase init</code> + create project + write migration SQL</li>
+          <li>Add 3 env vars: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, GEMINI_API_KEY</li>
+          <li>Stitch: Run ingest script to seed election phase data into Supabase</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <div class="tl-time">0:15</div>
+        <div class="tl-dot" style="background:#0F6E56"></div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-body">
+        <div class="tl-title">Core Data + Auth (15–30 min)</div>
+        <ul class="tl-tasks">
+          <li>Supabase schema: election_phases, quiz_questions, user_progress, deadlines</li>
+          <li>Enable Supabase anonymous auth (no friction for judges)</li>
+          <li>Enable RLS policies — SELECT public, INSERT authenticated only</li>
+          <li>Write <code>useElectionData</code> hook — fetches phases sorted by order</li>
+          <li>Deploy Supabase Edge Function: gemini-chat proxy with rate limiting</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <div class="tl-time">0:30</div>
+        <div class="tl-dot" style="background:#534AB7"></div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-body">
+        <div class="tl-title">Critical Story: Journey Page (30–75 min) 🔥</div>
+        <ul class="tl-tasks">
+          <li>Build InteractiveTimeline component — vertical stepper, each phase clickable</li>
+          <li>PhaseCard: title, description, deadline badge, "Mark complete" button</li>
+          <li>Wire Antigravity: entrance animation per card, completion animation</li>
+          <li>Floating AI chat bubble — opens ChatWindow, auto-prefilled with current phase context</li>
+          <li>useGeminiChat hook: streams Gemini response through Edge Function</li>
+          <li>Voter type selector on Home (first-time / returning / overseas) → personalizes journey</li>
+          <li>Persist completed steps to Supabase user_progress table</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <div class="tl-time">1:15</div>
+        <div class="tl-dot" style="background:#854F0B"></div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-body">
+        <div class="tl-title">Quiz Module + Polish (75–105 min)</div>
+        <ul class="tl-tasks">
+          <li>QuizCard component: question, 4 options, instant AI explanation on wrong answer</li>
+          <li>Score saved to Supabase, streak counter in UI header</li>
+          <li>Write 3 Vitest unit tests: quiz scoring logic, deadline formatter, phase sort</li>
+          <li>Accessibility pass: aria-labels, keyboard nav, focus rings, color contrast check</li>
+          <li>Add lang switcher → calls Gemini for on-the-fly translation</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-left">
+        <div class="tl-time">1:45</div>
+        <div class="tl-dot" style="background:#185FA5"></div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-body">
+        <div class="tl-title">Deploy + README (105–120 min)</div>
+        <ul class="tl-tasks">
+          <li><code>docker build</code> → push to GCP Artifact Registry → deploy Cloud Run</li>
+          <li>Set Cloud Run env vars, verify HTTPS endpoint</li>
+          <li>Add GCP Cloud Logging — log every Gemini call (satisfies Google Services criterion)</li>
+          <li>Write README: architecture diagram, setup steps, tech stack rationale</li>
+          <li>Final smoke test: full voter journey, quiz, AI chat, keyboard-only nav</li>
+          <li>Submit with live URL + GitHub link</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCORING -->
+<div class="section" id="scoring">
+  <h2>Evaluation Criteria — Your Edge</h2>
+
+  <div class="score-grid">
+    <div class="score-card">
+      <h4>Code Quality</h4>
+      <ul>
+        <li>TypeScript strict mode throughout</li>
+        <li>Custom hooks isolate all side effects</li>
+        <li>No inline styles — Tailwind only</li>
+        <li>Consistent error boundaries</li>
+        <li>README explains every decision</li>
+      </ul>
+    </div>
+    <div class="score-card">
+      <h4>Security</h4>
+      <ul>
+        <li>Gemini key only in Edge Function (server-side)</li>
+        <li>Supabase RLS on all tables</li>
+        <li>Input sanitization before Gemini prompt</li>
+        <li>Anonymous auth — no PII collected</li>
+        <li>HTTPS enforced on Cloud Run</li>
+      </ul>
+    </div>
+    <div class="score-card">
+      <h4>Efficiency</h4>
+      <ul>
+        <li>Gemini response cache in Edge Function (KV store)</li>
+        <li>Vite code splitting per route</li>
+        <li>Supabase select only needed columns</li>
+        <li>Lazy-load quiz module</li>
+        <li>Stitch pre-seeds data — no runtime fetch</li>
+      </ul>
+    </div>
+    <div class="score-card">
+      <h4>Testing</h4>
+      <ul>
+        <li>Vitest: quiz scoring logic</li>
+        <li>Vitest: deadline date formatter</li>
+        <li>Vitest: phase sort order</li>
+        <li>Mention test coverage in README</li>
+        <li>Add test:ci script to package.json</li>
+      </ul>
+    </div>
+    <div class="score-card">
+      <h4>Accessibility</h4>
+      <ul>
+        <li>react-aria for all interactive elements</li>
+        <li>Full keyboard navigation on timeline</li>
+        <li>ARIA live regions for AI chat</li>
+        <li>4.5:1 color contrast minimum</li>
+        <li>Skip-to-content link in header</li>
+      </ul>
+    </div>
+    <div class="score-card">
+      <h4>Google Services</h4>
+      <ul>
+        <li>Vertex AI (Gemini 1.5 Flash) — AI chat</li>
+        <li>Cloud Run — app deployment</li>
+        <li>Cloud Logging — audit trail</li>
+        <li>Cloud Build — CI/CD pipeline</li>
+        <li>Artifact Registry — Docker images</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>3 Things That Put You in the Top 1%</h2>
+
+  <div class="win-box">
+    <div class="win-num">01</div>
+    <div class="win-text">
+      <h4>The AI knows where the user is</h4>
+      <p>When the judge opens the chat on the "Candidate Filing" phase, Gemini already has that context. It doesn't ask "what do you want to know?" — it says "You're on candidate filing. Deadlines typically fall 45 days before election day. What would you like clarified?" That's not a chatbot. That's a civic companion.</p>
+    </div>
+  </div>
+  <div class="win-box">
+    <div class="win-num">02</div>
+    <div class="win-text">
+      <h4>Antigravity makes the timeline feel inevitable</h4>
+      <p>Every phase card slides in with a stagger. Completing a step triggers a satisfying completion pulse. The progress bar animates smoothly. Judges have seen 40 React apps today. Yours is the only one that feels like it was designed, not built.</p>
+    </div>
+  </div>
+  <div class="win-box">
+    <div class="win-num">03</div>
+    <div class="win-text">
+      <h4>Security is invisible but verifiable</h4>
+      <p>Your Supabase Edge Function logs every request. Your RLS policies are visible in the Supabase dashboard. Your API key is not in the client bundle. When the AI evaluator scans your code, it finds zero exposed secrets and clean separation of concerns. That's a perfect Security score.</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const ids=['stories','features','techstack','filestructure','timeline','scoring'];
+    t.classList.toggle('active',ids[i]===id);
+  });
+  document.querySelectorAll('.section').forEach(s=>{
+    s.classList.toggle('active',s.id===id);
+  });
+}
+</script>
