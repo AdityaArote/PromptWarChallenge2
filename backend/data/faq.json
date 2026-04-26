@@ -1,0 +1,25 @@
+{
+  "categories": [
+    {
+      "name": "Registration",
+      "questions": [
+        {"q": "How do I register to vote?", "a": "Visit your local electoral commission website or visit a registration centre with valid ID."},
+        {"q": "What is the registration deadline?", "a": "Deadlines vary by election. Typically 30-60 days before election day. Check your local electoral authority."}
+      ]
+    },
+    {
+      "name": "Voting Day",
+      "questions": [
+        {"q": "What ID do I need?", "a": "A government-issued photo ID such as a passport, driver's licence, or national identity card."},
+        {"q": "What time do polls open?", "a": "Polling hours vary by jurisdiction, typically 7am–8pm on election day."}
+      ]
+    },
+    {
+      "name": "Results",
+      "questions": [
+        {"q": "When are results announced?", "a": "Preliminary results are usually available on election night; official results are certified within days or weeks."},
+        {"q": "How are votes counted?", "a": "Ballots are counted by trained electoral officials. Results are verified against tallies from multiple counting centres."}
+      ]
+    }
+  ]
+}
