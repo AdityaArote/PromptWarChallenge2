@@ -5,8 +5,8 @@
 
 ## Phase 1 — Foundation (H0–H8)
 **Goal:** Working streaming chatbot end-to-end with repo scaffold, Supabase schema, and Vertex AI credentials.
-**Status:** 📋 Planned
-**Plans:** 01-PLAN-repo-scaffold.md · 01-PLAN-supabase-schema.md · 01-PLAN-streaming-chat.md
+**Status:** ✅ Complete (H0–H8)
+**Plans:** 01-01-SUMMARY.md ✓ · 01-02-SUMMARY.md ✓ · 01-03-SUMMARY.md ✓
 **Depends on:** —
 
 Deliverables:
