@@ -21,9 +21,9 @@ Deliverables:
 
 ## Phase 2 — Core Features (H8–H20)
 **Goal:** Interactive Timeline + Voter Checklist + Google Translate + Misinformation Buster all live.
-**Status:** 📋 Planned
+**Status:** ✅ Complete (H8–H20)
 **Depends on:** Phase 1
-**Plans:** 02-PLAN-timeline-checklist.md · 02-PLAN-translate-factcheck.md
+**Plans:** 02-01-SUMMARY.md ✓ · 02-02-SUMMARY.md ✓
 
 Deliverables:
 - Interactive Election Timeline (static JSON data, click-to-expand slide-over panels, Framer Motion)
