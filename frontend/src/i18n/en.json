@@ -1,0 +1,21 @@
+{
+  "nav.home": "Home",
+  "nav.timeline": "Election Timeline",
+  "nav.checklist": "My Checklist",
+  "nav.factcheck": "Fact Check",
+  "nav.quiz": "Quiz",
+  "nav.maps": "Find Polling Booth",
+  "home.title": "Your election guide, in your language",
+  "home.subtitle": "Understand how to vote, where to vote, and what to believe.",
+  "chat.placeholder": "Ask about elections...",
+  "chat.open": "Open AI assistant",
+  "checklist.title": "Your Voter Checklist",
+  "checklist.progress": "complete",
+  "timeline.title": "Election Timeline",
+  "timeline.subtitle": "Tap a phase to learn what it means for you.",
+  "factcheck.title": "Fact Checker",
+  "factcheck.placeholder": "Enter a claim you've seen or heard...",
+  "factcheck.submit": "Check this claim",
+  "quiz.title": "Civic Knowledge Quiz",
+  "quiz.start": "Start Quiz"
+}
