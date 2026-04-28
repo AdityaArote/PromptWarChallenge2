@@ -71,7 +71,7 @@ export function Maps() {
 
       {error && <p role="alert" className="text-red-600 text-sm mb-4">{error}</p>}
 
-      {console.log("Map API Key defined:", !!import.meta.env.VITE_MAPS_API_KEY)}
+
       <APIProvider apiKey={import.meta.env.VITE_MAPS_API_KEY}>
         <div className="rounded-2xl overflow-hidden border border-gray-200 mb-4" style={{ height: 340 }}>
           <Map

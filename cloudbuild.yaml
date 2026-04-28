@@ -1,0 +1,75 @@
+steps:
+  # ── Build Backend ────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/electiq-backend'
+      - './backend'
+
+  # ── Push Backend ─────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend'
+    args: ['push', 'gcr.io/$PROJECT_ID/electiq-backend']
+    waitFor: ['build-backend']
+
+  # ── Deploy Backend to Cloud Run ───────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-backend'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'electiq-backend'
+      - '--image=gcr.io/$PROJECT_ID/electiq-backend'
+      - '--platform=managed'
+      - '--region=us-central1'
+      - '--allow-unauthenticated'
+      - '--service-account=promptwarchallenge2@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--set-env-vars=VERTEX_AI_PROJECT=$PROJECT_ID,VERTEX_AI_LOCATION=us-central1'
+      - '--set-secrets=GOOGLE_APPLICATION_CREDENTIALS=gcp-service-account-key:latest'
+      - '--memory=1Gi'
+      - '--port=8080'
+    waitFor: ['push-backend']
+
+  # ── Build Frontend ────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/electiq-frontend'
+      - '--build-arg'
+      - 'VITE_API_BASE_URL=https://electiq-backend-${_BACKEND_SUFFIX}'
+      - './frontend'
+    waitFor: ['deploy-backend']
+
+  # ── Push Frontend ─────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-frontend'
+    args: ['push', 'gcr.io/$PROJECT_ID/electiq-frontend']
+    waitFor: ['build-frontend']
+
+  # ── Deploy Frontend to Cloud Run ──────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-frontend'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'electiq-frontend'
+      - '--image=gcr.io/$PROJECT_ID/electiq-frontend'
+      - '--platform=managed'
+      - '--region=us-central1'
+      - '--allow-unauthenticated'
+      - '--memory=256Mi'
+      - '--port=8080'
+    waitFor: ['push-frontend']
+
+images:
+  - 'gcr.io/$PROJECT_ID/electiq-backend'
+  - 'gcr.io/$PROJECT_ID/electiq-frontend'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

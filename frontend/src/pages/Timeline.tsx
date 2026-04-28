@@ -23,8 +23,8 @@ export function Timeline() {
 
   useEffect(() => {
     apiFetch('/api/timeline')
-      .then((r) => r.json())
-      .then((d) => {
+      .then((r: any) => r.json())
+      .then((d: any) => {
         setPhases(d.phases)
         setLoading(false)
       })

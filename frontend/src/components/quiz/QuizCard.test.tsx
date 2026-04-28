@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+// @ts-ignore
 import { axe } from 'jest-axe'
 import { QuizCard } from './QuizCard'
 import { vi, test, expect } from 'vitest'
@@ -33,5 +34,6 @@ test('calls onAnswer after selection', async () => {
 test('has no axe violations', async () => {
   const { container } = render(<QuizCard question={mockQuestion} onAnswer={() => {}} />)
   const results = await axe(container)
+  // @ts-ignore
   expect(results).toHaveNoViolations()
 })

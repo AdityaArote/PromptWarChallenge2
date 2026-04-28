@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+// @ts-ignore
 import { axe } from 'jest-axe'
 import { ChecklistItemComponent } from './ChecklistItem'
 import { vi, test, expect } from 'vitest'
@@ -26,5 +27,6 @@ test('shows completed state', () => {
 test('has no axe violations', async () => {
   const { container } = render(<ChecklistItemComponent item={mockItem} onToggle={() => {}} />)
   const results = await axe(container)
+  // @ts-ignore
   expect(results).toHaveNoViolations()
 })

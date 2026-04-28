@@ -43,7 +43,7 @@ export function Quiz() {
           if (!r.ok) throw new Error(data.detail || 'Failed to submit quiz')
           setResult(data)
         })
-        .catch(err => {
+        .catch((err: any) => {
           setResult({ detail: err.message, score: 0, correct: 0, total: questions.length })
         })
         .finally(() => setLoading(false))
