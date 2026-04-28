@@ -127,6 +127,17 @@ app.include_router(maps.router)
 app.include_router(quiz.router)
 
 
+@app.get("/")
+def root():
+    """Welcome message for the ElectIQ API."""
+    return {
+        "app": "ElectIQ API",
+        "version": "1.0.0",
+        "status": "operational",
+        "docs": "/docs",
+    }
+
+
 # ─── Health & Readiness probes ───────────────────────────────────────────────
 @app.get("/health")
 def health():
