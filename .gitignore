@@ -1,13 +1,44 @@
+# ─── Secrets & credentials ────────────────────────────────────────────────────
 .env
+.env.*
+!.env.example
 credentials/
+*.json.key
+service_account*.json
+
+# ─── Python ───────────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
 .pytest_cache/
-node_modules/
-frontend/dist/
-.DS_Store
-*.egg-info/
 .mypy_cache/
 .ruff_cache/
+*.egg-info/
 .venv/
 venv/
+dist/
+build/
+*.so
+htmlcov/
+.coverage
+
+# ─── Node / Frontend ──────────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# ─── OS / Editor ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/settings.json
+.idea/
+
+# ─── Zip exports (prevent pushing archives with real credentials) ─────────────
+*.zip
+*.tar.gz
+*.tar

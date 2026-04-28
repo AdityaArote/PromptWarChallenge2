@@ -1,7 +1,8 @@
 import json
+import logging
 
 from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from services.rag import _cache, cache_key, get_top_k
 from services.sanitise import sanitise
 from services.supabase_client import get_supabase, verify_session
@@ -11,15 +12,18 @@ from slowapi.util import get_remote_address
 
 router = APIRouter(prefix="/api/fact-check", tags=["fact-check"])
 limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger("electiq")
+
+_VALID_VERDICTS = {"TRUE", "FALSE", "MISLEADING", "CONTEXT-DEPENDENT"}
 
 
 class ClaimRequest(BaseModel):
-    claim: str
+    claim: str = Field(..., min_length=5, max_length=500)
 
 
 class FlagRequest(BaseModel):
-    claim: str
-    verdict_returned: str
+    claim: str = Field(..., max_length=500)
+    verdict_returned: str = Field(..., max_length=50)
 
 
 FACT_CHECK_PROMPT = """You are a non-partisan election fact-checker.
@@ -62,14 +66,11 @@ async def fact_check(
             [Content(role="user", parts=[Part.from_text(prompt)])],
             generation_config={"response_mime_type": "application/json"},
         )
-    except Exception as e:
-        print(f"[FactCheck] Vertex AI Error: {e}")
-        import traceback
-
-        traceback.print_exc()
+    except Exception:
+        logger.exception("[FactCheck] Vertex AI error")
         return {
             "verdict": "ERROR",
-            "explanation": f"AI Service unavailable: {str(e)}",
+            "explanation": "AI service temporarily unavailable. Please try again.",
             "sources": [],
         }
 
@@ -81,6 +82,13 @@ async def fact_check(
             "explanation": response.text[:300],
             "sources": [],
         }
+
+    # Enforce verdict is one of the known values
+    if result.get("verdict") not in _VALID_VERDICTS:
+        logger.warning(
+            "[FactCheck] Unexpected verdict from AI: %s — defaulting", result.get("verdict")
+        )
+        result["verdict"] = "CONTEXT-DEPENDENT"
 
     _cache[ck] = result
     return {**result, "cached": False}

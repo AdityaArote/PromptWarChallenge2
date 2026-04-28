@@ -1,4 +1,5 @@
 import json
+import logging
 import pathlib
 import random
 
@@ -12,6 +13,7 @@ from vertexai.generative_models import Content, Part
 
 router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger("electiq")
 
 BADGES = {
     90: "🏆 Election Expert",
@@ -27,9 +29,13 @@ def _fallback_questions():
     return random.sample(qs, min(10, len(qs)))
 
 
-GEN_PROMPT = """Generate 10 multiple-choice quiz questions about democratic elections, voting procedures, and civic participation.
-Return ONLY valid JSON array. Each object: {"question": "...", "options": ["A","B","C","D"], "correct": 0, "explanation": "..."}
-Correct index is 0-based. Make questions educational and non-partisan."""
+GEN_PROMPT = (
+    "Generate 10 multiple-choice quiz questions about democratic elections, "
+    "voting procedures, and civic participation.\n"
+    "Return ONLY valid JSON array. Each object: "
+    '{"question": "...", "options": ["A","B","C","D"], "correct": 0, "explanation": "..."}\n'
+    "Correct index is 0-based. Make questions educational and non-partisan."
+)
 
 
 @router.post("/generate")
@@ -54,6 +60,13 @@ async def submit_quiz(body: QuizSubmission, session_id: str = Depends(verify_ses
     if not body.questions:
         raise HTTPException(status_code=400, detail="No questions provided")
 
+    # Reject if more answers than questions — prevents score manipulation
+    if len(body.answers) > len(body.questions):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Answer count ({len(body.answers)}) exceeds question count ({len(body.questions)})",
+        )
+
     correct = sum(
         1
         for i, q in enumerate(body.questions)
@@ -66,9 +79,9 @@ async def submit_quiz(body: QuizSubmission, session_id: str = Depends(verify_ses
         get_supabase().table("quiz_scores").insert(
             {"session_id": session_id, "score": score, "badge": badge}
         ).execute()
-    except Exception as e:
-        print(f"Database error: {e}")
-        # We still return the score even if saving fails
+    except Exception:
+        logger.exception("[Quiz] Failed to persist score for session %s", session_id)
+        # Still return the score even if saving fails
 
     explanations = [
         {

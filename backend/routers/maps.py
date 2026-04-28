@@ -1,7 +1,7 @@
 import os
 
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Query
 
 router = APIRouter(prefix="/api/maps", tags=["maps"])
 
@@ -11,7 +11,10 @@ def get_maps_key() -> str:
 
 
 @router.get("/search")
-async def search_booths(lat: float, lng: float):
+async def search_booths(
+    lat: float = Query(..., ge=-90.0, le=90.0, description="Latitude in [-90, 90]"),
+    lng: float = Query(..., ge=-180.0, le=180.0, description="Longitude in [-180, 180]"),
+):
     """Proxy Places Text Search — keeps API key server-side."""
     async with httpx.AsyncClient() as client:
         r = await client.post(
@@ -24,12 +27,20 @@ async def search_booths(lat: float, lng: float):
             },
             headers={
                 "X-Goog-Api-Key": get_maps_key(),
-                "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location,places.id",
+                "X-Goog-FieldMask": (
+                    "places.displayName,places.formattedAddress,"
+                    "places.location,places.id"
+                ),
             },
         )
         data = r.json()
         if "error" in data:
-            print(f"[Maps Error] Places API: {data['error']}")
+            # Log server-side only — never forward raw API errors to client
+            import logging
+
+            logging.getLogger("electiq").error("[Maps] Places API error: %s", data["error"])
+            raise HTTPException(status_code=502, detail="Upstream maps service error")
+
         places = []
         for p in data.get("places", [])[:5]:
             loc = p.get("location", {})
@@ -47,7 +58,7 @@ async def search_booths(lat: float, lng: float):
 
 
 @router.get("/geocode")
-async def geocode(address: str):
+async def geocode(address: str = Query(..., min_length=2, max_length=200)):
     async with httpx.AsyncClient() as client:
         r = await client.get(
             "https://maps.googleapis.com/maps/api/geocode/json",
@@ -55,9 +66,9 @@ async def geocode(address: str):
         )
         data = r.json()
         if data.get("status") != "OK":
-            print(
-                f"[Maps Error] Geocoding API Status: {data.get('status')}, Error: {data.get('error_message', 'No message')}"
-            )
+            import logging
+
+            logging.getLogger("electiq").warning("[Maps] Geocoding status: %s", data.get("status"))
         results = data.get("results", [])
         if not results:
             return {"error": "not found"}
