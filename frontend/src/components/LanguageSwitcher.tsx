@@ -31,7 +31,8 @@ export function LanguageSwitcher() {
       // Only fetch if bundle isn't already registered
       if (!i18n.hasResourceBundle(code, 'translation')) {
         try {
-          const res = await fetch(`/api/translate/bundle?lang=${code}`)
+          const baseUrl = import.meta.env.VITE_API_BASE_URL ?? ''
+          const res = await fetch(`${baseUrl}/api/translate/bundle?lang=${code}`)
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
           const bundle = await res.json()
           // Register bundle BEFORE changing language so React re-renders with correct strings

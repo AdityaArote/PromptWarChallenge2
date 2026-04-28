@@ -1,0 +1,46 @@
+steps:
+  # ── Build Frontend (no cache) ─────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    args:
+      - 'build'
+      - '--no-cache'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/electiq-frontend'
+      - '--build-arg'
+      - 'VITE_API_BASE_URL=${_VITE_API_BASE_URL}'
+      - '--build-arg'
+      - 'VITE_SUPABASE_URL=${_VITE_SUPABASE_URL}'
+      - '--build-arg'
+      - 'VITE_SUPABASE_ANON_KEY=${_VITE_SUPABASE_ANON_KEY}'
+      - '--build-arg'
+      - 'VITE_MAPS_API_KEY=${_VITE_MAPS_API_KEY}'
+      - './frontend'
+
+  # ── Push ─────────────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-frontend'
+    args: ['push', 'gcr.io/$PROJECT_ID/electiq-frontend']
+    waitFor: ['build-frontend']
+
+  # ── Deploy to Cloud Run ───────────────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-frontend'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'electiq-frontend'
+      - '--image=gcr.io/$PROJECT_ID/electiq-frontend'
+      - '--platform=managed'
+      - '--region=us-central1'
+      - '--allow-unauthenticated'
+      - '--memory=256Mi'
+      - '--port=8080'
+    waitFor: ['push-frontend']
+
+images:
+  - 'gcr.io/$PROJECT_ID/electiq-frontend'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
