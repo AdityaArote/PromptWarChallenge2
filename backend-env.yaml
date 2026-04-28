@@ -1,7 +1,0 @@
-ALLOWED_ORIGINS: "https://electiq-frontend-egwzz6yhjq-uc.a.run.app,https://electiq-frontend-503525367519.us-central1.run.app,http://localhost:5173"
-VERTEX_AI_PROJECT: "promptchallenge2"
-VERTEX_AI_LOCATION: "us-central1"
-SUPABASE_URL: "https://ameyoiepjadefzvrbcam.supabase.co"
-SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtZXlvaWVwamFkZWZ6dnJiY2FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODk2OTUsImV4cCI6MjA5MjM2NTY5NX0.unW-c0IJZYl3WBqDvgPy0540F8lOzOogi7MI5yvaa8A"
-SUPABASE_SERVICE_ROLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtZXlvaWVwamFkZWZ6dnJiY2FtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njc4OTY5NSwiZXhwIjoyMDkyMzY1Njk1fQ.Uvqa6N7xHXQ0Mc6Ezwb93FtRtqxeRAPKu4p28zweeUc"
-GOOGLE_MAPS_SERVER_KEY: "AIzaSyCO3xofZkoOCkjB3_TVHthiyEaMrZ0YXy0"

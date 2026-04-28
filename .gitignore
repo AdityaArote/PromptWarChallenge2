@@ -1,12 +1,4 @@
-# ─── Secrets & credentials ────────────────────────────────────────────────────
-.env
-.env.*
-!.env.example
-credentials/
-*.json.key
-service_account*.json
-
-# ─── Python ───────────────────────────────────────────────────────────────────
+# ─── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
@@ -23,12 +15,30 @@ build/
 htmlcov/
 .coverage
 
-# ─── Node / Frontend ──────────────────────────────────────────────────────────
-node_modules/
-frontend/dist/
+# ─── Secrets & credentials (NEVER commit real keys) ───────────────────────────
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
 frontend/.env
 frontend/.env.*
 !frontend/.env.example
+credentials/
+*.json.key
+service_account*.json
+gcp-*.json
+*-service-account*.json
+
+# ─── Logs & debug artifacts ───────────────────────────────────────────────────
+*.log
+error_log.txt
+logs/
+
+# ─── Node / Frontend ──────────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
 
 # ─── OS / Editor ──────────────────────────────────────────────────────────────
 .DS_Store
@@ -38,7 +48,5 @@ Thumbs.db
 .vscode/settings.json
 .idea/
 
-# ─── Zip exports (prevent pushing archives with real credentials) ─────────────
-*.zip
-*.tar.gz
-*.tar
+# ─── Cloud Build / Deployment config with embedded secrets ────────────────────
+backend-env.yaml

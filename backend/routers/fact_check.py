@@ -90,12 +90,17 @@ async def fact_check(
         )
         result["verdict"] = "CONTEXT-DEPENDENT"
 
+    # Guarantee sources field is always present
+    result.setdefault("sources", [])
+
     _cache[ck] = result
     return {**result, "cached": False}
 
 
 @router.post("/flag")
+@limiter.limit("10/minute")
 async def flag_result(
+    request: Request,
     body: FlagRequest,
     session_id: str = Depends(verify_session),
 ):

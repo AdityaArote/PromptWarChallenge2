@@ -10,18 +10,17 @@ Tests:
   - /ready probe returns 503 when RAG KB is empty
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-
 from main import app
 from services.supabase_client import verify_session
 
 # ─── Auth enforcement — protected routes return 401 without a token ───────────
 
-PROTECTED_ROUTES = [
+PROTECTED_ROUTES: list[tuple[str, str, dict | None]] = [
     ("POST", "/api/chat/stream", {"message": "hello", "history": []}),
-    ("GET",  "/api/checklist",   None),
+    ("GET", "/api/checklist", None),
     ("POST", "/api/quiz/generate", None),
     ("POST", "/api/quiz/submit", {"questions": [], "answers": []}),
     ("POST", "/api/fact-check", {"claim": "elections are rigged"}),
@@ -37,6 +36,7 @@ def test_protected_route_without_auth_returns_401(client, method, path, body):
 
 
 # ─── Bearer token edge cases ──────────────────────────────────────────────────
+
 
 def test_empty_bearer_token_rejected(client):
     """'Authorization: Bearer ' with no token must return 401."""
@@ -58,13 +58,17 @@ def test_missing_bearer_prefix_rejected(client):
 
 # ─── Coordinate bounds ────────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("lat,lng", [
-    (91.0, 0.0),    # lat too high
-    (-91.0, 0.0),   # lat too low
-    (0.0, 181.0),   # lng too high
-    (0.0, -181.0),  # lng too low
-    (200.0, 200.0), # both out of range
-])
+
+@pytest.mark.parametrize(
+    "lat,lng",
+    [
+        (91.0, 0.0),  # lat too high
+        (-91.0, 0.0),  # lat too low
+        (0.0, 181.0),  # lng too high
+        (0.0, -181.0),  # lng too low
+        (200.0, 200.0),  # both out of range
+    ],
+)
 @pytest.mark.asyncio
 async def test_maps_invalid_coordinates_rejected(lat, lng):
     from httpx import ASGITransport, AsyncClient
@@ -75,6 +79,7 @@ async def test_maps_invalid_coordinates_rejected(lat, lng):
 
 
 # ─── Fact-check input validation ──────────────────────────────────────────────
+
 
 def test_fact_check_too_short_claim_rejected(client):
     """Claims shorter than 5 characters must be rejected with 422."""
@@ -112,6 +117,16 @@ EXPECTED_HEADERS = {
     "x-frame-options": "DENY",
     "referrer-policy": "strict-origin-when-cross-origin",
     "permissions-policy": "geolocation=(), microphone=(), camera=()",
+    "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+    "content-security-policy": (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://maps.googleapis.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' https://*.supabase.co https://*.googleapis.com; "
+        "frame-ancestors 'none';"
+    ),
 }
 
 
@@ -121,12 +136,13 @@ def test_security_headers_present(client, path):
         r = client.get(path)
     for header, value in EXPECTED_HEADERS.items():
         assert header in r.headers, f"Missing header: {header} on {path}"
-        assert r.headers[header] == value, (
-            f"Header {header} on {path}: expected {value!r}, got {r.headers[header]!r}"
-        )
+        assert (
+            r.headers[header] == value
+        ), f"Header {header} on {path}: expected {value!r}, got {r.headers[header]!r}"
 
 
 # ─── Readiness probe ──────────────────────────────────────────────────────────
+
 
 def test_ready_returns_503_when_kb_empty(client):
     with patch("services.rag.kb_size", return_value=0):

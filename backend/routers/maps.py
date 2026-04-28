@@ -2,9 +2,12 @@ import logging
 import os
 
 import httpx
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 router = APIRouter(prefix="/api/maps", tags=["maps"])
+limiter = Limiter(key_func=get_remote_address)
 logger = logging.getLogger(__name__)
 
 
@@ -13,7 +16,9 @@ def get_maps_key() -> str:
 
 
 @router.get("/search")
+@limiter.limit("30/minute")
 async def search_booths(
+    request: Request,
     lat: float = Query(..., ge=-90.0, le=90.0, description="Latitude in [-90, 90]"),
     lng: float = Query(..., ge=-180.0, le=180.0, description="Longitude in [-180, 180]"),
 ):
@@ -34,8 +39,7 @@ async def search_booths(
                 headers={
                     "X-Goog-Api-Key": get_maps_key(),
                     "X-Goog-FieldMask": (
-                        "places.displayName,places.formattedAddress,"
-                        "places.location,places.id"
+                        "places.displayName,places.formattedAddress," "places.location,places.id"
                     ),
                 },
             )
@@ -44,7 +48,9 @@ async def search_booths(
             logger.error("[Maps] Places API timed out for lat=%s lng=%s", lat, lng)
             raise HTTPException(status_code=504, detail="Maps service timed out")
         except httpx.HTTPStatusError as exc:
-            logger.error("[Maps] Places API HTTP %s: %s", exc.response.status_code, exc.response.text)
+            logger.error(
+                "[Maps] Places API HTTP %s: %s", exc.response.status_code, exc.response.text
+            )
             raise HTTPException(status_code=502, detail="Upstream maps service error")
 
         data = r.json()
@@ -69,7 +75,11 @@ async def search_booths(
 
 
 @router.get("/geocode")
-async def geocode(address: str = Query(..., min_length=2, max_length=200)):
+@limiter.limit("30/minute")
+async def geocode(
+    request: Request,
+    address: str = Query(..., min_length=2, max_length=200),
+):
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             r = await client.get(
