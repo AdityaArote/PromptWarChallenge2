@@ -160,7 +160,7 @@ electiq/
 
 ## 👥 Team
 
-Built solo in 48 hours for the **Hack2Skills × Google Hackathon 2025**.
+Built solo for the **Hack2Skills × Google Hackathon 2026**.
 
 ---
 
