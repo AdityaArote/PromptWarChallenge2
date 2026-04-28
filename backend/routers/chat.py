@@ -1,13 +1,13 @@
 import json
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
+from models.chat import ChatRequest
+from services.sanitise import sanitise
+from services.supabase_client import verify_session
+from services.vertex import build_contents, get_model
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-
-from ..models.chat import ChatRequest
-from ..services.vertex import get_model, build_contents
-from ..services.sanitise import sanitise
-from ..services.supabase_client import verify_session
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 limiter = Limiter(key_func=get_remote_address)

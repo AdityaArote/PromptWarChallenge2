@@ -31,7 +31,7 @@ export function Timeline() {
       .catch(() => setLoading(false))
   }, [])
 
-  const handleCta = (_itemId: string) => {
+  const handleCta = () => {
     setSelected(null)
     window.location.href = '/checklist'
   }

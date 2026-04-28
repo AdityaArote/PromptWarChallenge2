@@ -1,10 +1,11 @@
 import os
+
 import vertexai
 from vertexai.generative_models import (
-    GenerativeModel,
     Content,
-    Part,
     GenerationConfig,
+    GenerativeModel,
+    Part,
 )
 
 _model: GenerativeModel | None = None
@@ -31,9 +32,7 @@ def get_model() -> GenerativeModel:
         _model = GenerativeModel(
             "gemini-1.5-flash",
             system_instruction=SYSTEM_PROMPT,
-            generation_config=GenerationConfig(
-                max_output_tokens=512, temperature=0.3
-            ),
+            generation_config=GenerationConfig(max_output_tokens=512, temperature=0.3),
         )
     return _model
 

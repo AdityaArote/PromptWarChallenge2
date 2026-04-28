@@ -1,5 +1,6 @@
 import json
 import pathlib
+
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/timeline", tags=["timeline"])
@@ -10,7 +11,7 @@ def _load():
     global _DATA
     if _DATA is None:
         p = pathlib.Path(__file__).parent.parent / "data" / "election_phases.json"
-        _DATA = json.loads(p.read_text())
+        _DATA = json.loads(p.read_text(encoding="utf-8"))
     return _DATA
 
 

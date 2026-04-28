@@ -1,8 +1,9 @@
-import json
-import pathlib
 import hashlib
-import numpy as np
+import json
 import os
+import pathlib
+
+import numpy as np
 from cachetools import TTLCache
 
 _cache: TTLCache = TTLCache(maxsize=500, ttl=3600)
@@ -21,12 +22,12 @@ def init_rag():
     from vertexai.language_models import TextEmbeddingModel
 
     p = pathlib.Path(__file__).parent.parent / "data" / "misinformation_kb.json"
-    _kb = json.loads(p.read_text())
+    _kb = json.loads(p.read_text(encoding="utf-8"))
     vertexai.init(
         project=os.environ["VERTEX_AI_PROJECT"],
         location=os.environ.get("VERTEX_AI_LOCATION", "us-central1"),
     )
-    model = TextEmbeddingModel.from_pretrained("textembedding-gecko@003")
+    model = TextEmbeddingModel.from_pretrained("text-embedding-004")
     print(f"[RAG] Embedding {len(_kb)} KB items...")
     texts = [item["claim"] for item in _kb]
     result = model.get_embeddings(texts)
@@ -43,7 +44,7 @@ def get_top_k(claim: str, k: int = 3) -> list:
         project=os.environ["VERTEX_AI_PROJECT"],
         location=os.environ.get("VERTEX_AI_LOCATION", "us-central1"),
     )
-    model = TextEmbeddingModel.from_pretrained("textembedding-gecko@003")
+    model = TextEmbeddingModel.from_pretrained("text-embedding-004")
     q_emb = model.get_embeddings([claim])[0].values
     scores = [(_cosine(q_emb, e), i) for i, e in enumerate(_embeddings)]
     scores.sort(reverse=True)

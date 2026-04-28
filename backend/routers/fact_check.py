@@ -1,12 +1,13 @@
 import json
+
 from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel
+from services.rag import _cache, cache_key, get_top_k
+from services.sanitise import sanitise
+from services.supabase_client import get_supabase, verify_session
+from services.vertex import get_model
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from pydantic import BaseModel
-from ..services.rag import get_top_k, cache_key, _cache
-from ..services.vertex import get_model
-from ..services.sanitise import sanitise
-from ..services.supabase_client import verify_session, get_supabase
 
 router = APIRouter(prefix="/api/fact-check", tags=["fact-check"])
 limiter = Limiter(key_func=get_remote_address)
@@ -23,8 +24,9 @@ class FlagRequest(BaseModel):
 
 FACT_CHECK_PROMPT = """You are a non-partisan election fact-checker.
 Given the following verified election facts as context, evaluate the user's claim.
-Return ONLY valid JSON with this exact structure:
-{{"verdict": "TRUE|FALSE|MISLEADING|CONTEXT-DEPENDENT", "explanation": "2-3 sentences", "sources": ["source1"]}}
+{{"verdict": "TRUE|FALSE|MISLEADING|CONTEXT-DEPENDENT",
+  "explanation": "2-3 sentences",
+  "sources": ["source1"]}}
 
 Context facts:
 {context}
@@ -37,7 +39,6 @@ User claim: {claim}"""
 async def fact_check(
     request: Request,
     body: ClaimRequest,
-    session_id: str = Depends(verify_session),
 ):
     clean = sanitise(body.claim, max_len=500)
     ck = cache_key(clean)
@@ -56,10 +57,22 @@ async def fact_check(
     model = get_model()
     from vertexai.generative_models import Content, Part
 
-    response = await model.generate_content_async(
-        [Content(role="user", parts=[Part.from_text(prompt)])],
-        generation_config={"response_mime_type": "application/json"},
-    )
+    try:
+        response = await model.generate_content_async(
+            [Content(role="user", parts=[Part.from_text(prompt)])],
+            generation_config={"response_mime_type": "application/json"},
+        )
+    except Exception as e:
+        print(f"[FactCheck] Vertex AI Error: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return {
+            "verdict": "ERROR",
+            "explanation": f"AI Service unavailable: {str(e)}",
+            "sources": [],
+        }
+
     try:
         result = json.loads(response.text)
     except Exception:

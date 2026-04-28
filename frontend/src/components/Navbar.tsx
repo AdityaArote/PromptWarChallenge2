@@ -7,6 +7,8 @@ const NAV_LINKS = [
   { to: '/timeline', label: 'nav.timeline' },
   { to: '/checklist', label: 'nav.checklist' },
   { to: '/fact-check', label: 'nav.factcheck' },
+  { to: '/maps', label: 'nav.maps' },
+  { to: '/quiz', label: 'nav.quiz' },
 ]
 
 export function Navbar() {

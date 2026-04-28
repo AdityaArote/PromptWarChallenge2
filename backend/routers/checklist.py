@@ -1,18 +1,19 @@
-from fastapi import APIRouter, Depends
-from ..models.checklist import ToggleRequest
-from ..services.supabase_client import get_supabase, verify_session
 from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends
+from models.checklist import ToggleRequest
+from services.supabase_client import get_supabase, verify_session
 
 router = APIRouter(prefix="/api/checklist", tags=["checklist"])
 
 DEFAULT_ITEMS = [
-    {"item_id": "check_registration",  "label": "Check your voter registration status"},
-    {"item_id": "confirm_booth",       "label": "Confirm your polling booth location"},
-    {"item_id": "prepare_id",          "label": "Prepare a valid photo ID"},
-    {"item_id": "arrange_transport",   "label": "Arrange transport to the polling booth"},
-    {"item_id": "plan_voting_time",    "label": "Plan what time you will vote"},
-    {"item_id": "learn_candidates",    "label": "Learn about the candidates and parties"},
-    {"item_id": "understand_ballot",   "label": "Understand how to fill in your ballot"},
+    {"item_id": "check_registration", "label": "Check your voter registration status"},
+    {"item_id": "confirm_booth", "label": "Confirm your polling booth location"},
+    {"item_id": "prepare_id", "label": "Prepare a valid photo ID"},
+    {"item_id": "arrange_transport", "label": "Arrange transport to the polling booth"},
+    {"item_id": "plan_voting_time", "label": "Plan what time you will vote"},
+    {"item_id": "learn_candidates", "label": "Learn about the candidates and parties"},
+    {"item_id": "understand_ballot", "label": "Understand how to fill in your ballot"},
 ]
 
 
