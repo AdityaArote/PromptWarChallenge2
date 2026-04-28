@@ -6,7 +6,7 @@ import random
 from fastapi import APIRouter, Depends, HTTPException, Request
 from models.quiz import QuizSubmission
 from services.supabase_client import get_supabase, verify_session
-from services.vertex import get_model
+from services.vertex import get_model  # noqa: F401 (used below)
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from vertexai.generative_models import Content, Part
@@ -76,7 +76,8 @@ GEN_PROMPT = (
 
 @router.post("/generate")
 @limiter.limit("5/minute")
-async def generate_questions(request: Request, session_id: str = Depends(verify_session)):
+async def generate_questions(request: Request):
+    """Generate 10 quiz questions. No auth required — questions are public content."""
     try:
         model = get_model()
         response = await model.generate_content_async(
