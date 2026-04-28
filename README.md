@@ -1,167 +1,201 @@
-# ElectIQ 🗳️
-> AI-powered civic education platform — making every election accessible to every voter.
+# ElectIQ — AI-Powered Election Guide
 
-**Hack2Skills × Google Hackathon Submission**
+> **Prompt Wars Submission** | Vertical: Civic Education & Democratic Participation
 
-[![Built with Gemini](https://img.shields.io/badge/Built%20with-Gemini%201.5%20Flash-blue)](https://cloud.google.com/vertex-ai)
-[![Google Maps](https://img.shields.io/badge/Google-Maps%20API-green)](https://developers.google.com/maps)
-[![Translate](https://img.shields.io/badge/Cloud-Translation%20API-orange)](https://cloud.google.com/translate)
+ElectIQ is a multilingual, AI-powered election information assistant that helps first-time and experienced voters understand the electoral process, find their polling booth, fact-check misinformation, and test their civic knowledge — all in one progressive web application.
 
 ---
 
-## 🎯 Problem Statement
+## Chosen Vertical
 
-Low voter turnout is caused by three root causes: **not knowing how to vote**, **not knowing where to vote**, and **not knowing what to believe**. ElectIQ attacks all three simultaneously through a single conversational, accessible, multilingual interface.
+**Civic Education & Democratic Participation**
 
----
-
-## ✨ Features
-
-| Feature | Google Service | What It Does |
-|---------|---------------|--------------|
-| 🤖 AI Chatbot | Vertex AI (Gemini 1.5 Flash) | Streaming SSE chat — answers any election question in plain language |
-| 🗓️ Election Timeline | — | 7-phase visual lifecycle with clickable explainer panels |
-| 🌍 50+ Languages | Cloud Translation API v3 | Full UI translation + chatbot responds in user's language |
-| 📍 Booth Locator | Google Maps JS API | Finds nearest voting centres with directions |
-| ✅ Voter Checklist | Supabase | Personalised, persistent step-by-step participation tracker |
-| 🧠 Quiz | Vertex AI (Gemini 1.5 Flash) | AI-generated civics MCQ with badge rewards |
-| 🔍 Fact Checker | Vertex AI + RAG | Busts election misinformation with sourced verdicts |
+Elections are the cornerstone of democracy, yet voter turnout is consistently suppressed by information barriers — people don't know how to register, where to vote, or whether what they've read online is true. ElectIQ directly tackles these barriers through a conversational AI assistant backed by verified data and real-time Google services.
 
 ---
 
-## 🏗️ Architecture
+## Features
+
+| Feature | Description | Google Service Used |
+|---------|-------------|---------------------|
+| 💬 **AI Chat** | Streaming election Q&A powered by Gemini 1.5 Flash | Vertex AI (Gemini) |
+| 🗓️ **Election Timeline** | Step-by-step electoral lifecycle for first-time and experienced voters | — |
+| ✅ **Voter Checklist** | Personalised to-do list persisted per session | Supabase |
+| 📍 **Polling Booth Finder** | Map with nearest voting centres based on your location | Google Maps, Places API |
+| 🔍 **Fact Checker** | RAG-powered verdict engine with `TRUE/FALSE/MISLEADING/CONTEXT-DEPENDENT` labels | Vertex AI (Gemini + Embeddings) |
+| 🌐 **Multilingual UI** | 10 priority languages via Google Cloud Translation | Cloud Translation API v3 |
+| 🧠 **Civic Quiz** | AI-generated questions with badge awards and leaderboard | Vertex AI (Gemini) |
+
+---
+
+## Architecture & Approach
 
 ```
-React (Vite 5) SPA
-       │ HTTPS
-       ▼
-FastAPI (Python 3.11) REST + SSE
-       │
-       ├──► Vertex AI (Gemini 1.5 Flash) — Chat, Quiz Gen, Fact-Check
-       ├──► Cloud Translation API v3 — 50+ language bundles
-       └──► Supabase (PostgreSQL + Auth + RLS) — Sessions, Checklist, Scores
-
-Google Maps JS API (client-side, HTTP-referrer restricted)
+┌────────────────────────────────────────────────────────────┐
+│                      React Frontend                        │
+│  TypeScript · Vite · Tailwind · @vis.gl/react-google-maps  │
+└──────────────────────┬─────────────────────────────────────┘
+                       │ REST + SSE streaming
+┌──────────────────────▼─────────────────────────────────────┐
+│                  FastAPI Backend                            │
+│  Python 3.12 · slowapi rate-limiting · Pydantic v2         │
+│                                                            │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐  │
+│  │  /chat   │ │  /quiz   │ │/fact-check│ │   /maps      │  │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └──────┬───────┘  │
+│       │             │            │               │          │
+│  ┌────▼─────────────▼────────────▼───┐   ┌──────▼───────┐  │
+│  │       Vertex AI (Gemini 1.5 Flash) │   │ Google Maps  │  │
+│  │       + text-embedding-004 (RAG)   │   │ Places API   │  │
+│  └───────────────────────────────────┘   └──────────────┘  │
+│                                                            │
+│  ┌─────────────────────┐  ┌──────────────────────────────┐  │
+│  │  Cloud Translation  │  │   Supabase (Auth + Postgres) │  │
+│  │  API v3             │  │   RLS enforced per session   │  │
+│  └─────────────────────┘  └──────────────────────────────┘  │
+└────────────────────────────────────────────────────────────┘
 ```
 
-**Key security decisions:**
-- All Google Cloud API keys live **exclusively in FastAPI** — React never touches raw credentials
-- Supabase RLS enforces row-level isolation per anonymous session
-- Input sanitisation with `bleach` before every Vertex AI call
-- Rate limiting: 30 chat req/min, 5 quiz gen/min (slowapi)
+### Key Design Decisions
+
+**RAG Fact-Checker**: Rather than letting Gemini hallucinate election facts, we embed a curated misinformation knowledge base using `text-embedding-004` at startup. Every claim submitted by a user is embedded at query time and the top-3 most similar KB entries are injected as grounding context. Results are SHA-256 keyed and cached for 1 hour to reduce API cost.
+
+**Server-side API Key Proxy**: The Google Maps API key never reaches the browser. All Places and Geocoding calls are proxied through `/api/maps/*`, which validates coordinates server-side before forwarding.
+
+**Streaming Chat**: The `/api/chat/stream` endpoint uses `StreamingResponse` with SSE (Server-Sent Events) so users see tokens as Gemini produces them — no waiting for a full response.
+
+**Per-session Persistence**: Voter checklists and quiz scores are stored in Supabase and linked to the user's anonymous session JWT, allowing progress to survive page refreshes without requiring account creation.
 
 ---
 
-## 🚀 Quick Start
+## Security
+
+- **Input sanitisation**: All user text is passed through `bleach.clean()` + control-character stripping before reaching any AI model or database.
+- **Rate limiting**: `slowapi` enforces per-IP limits on expensive endpoints (chat: 30/min, fact-check: 20/min, quiz generate: 5/min).
+- **JWT verification**: Protected routes call Supabase `auth.get_user()` on every request — no custom token parsing.
+- **Security headers**: All responses include `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy`.
+- **Prompt injection guard**: The Gemini system prompt explicitly instructs the model to ignore embedded override instructions.
+- **Coordinate validation**: The `/maps/search` endpoint enforces `lat ∈ [-90, 90]` and `lng ∈ [-180, 180]` via Pydantic/FastAPI query constraints.
+- **CORS**: Production origins are configured via `ALLOWED_ORIGINS` environment variable — `localhost` is not whitelisted in production.
+- **Secret management**: No API keys or credentials are committed. All secrets are loaded from environment variables (`.env` for local dev, Cloud Run secrets for production).
+
+---
+
+## Efficiency
+
+- **Model singleton**: The Gemini `GenerativeModel` is instantiated once and reused.
+- **TTL caches**: Fact-check results are cached for 1 hour; translation bundles for 24 hours; leaderboard queries hit the DB once per request.
+- **RAG batch embedding**: All KB items are embedded in a single batch call at startup, not on every request.
+- **Context window management**: Chat history is capped at the last 6 turns to avoid token waste.
+- **Distance sort**: Polling booth results are sorted by haversine distance server-side.
+
+---
+
+## Testing
+
+```bash
+cd backend
+pytest tests/ -v --cov=. --cov-report=term-missing
+```
+
+Test coverage spans:
+- **Health & routing** — `/health`, `/ready`, chat starters, FAQ
+- **Sanitisation** — HTML stripping, control chars, Unicode preservation, length limits
+- **Maps** — valid responses, coordinate validation (lat/lng bounds), address geocoding
+- **Quiz** — AI path, fallback path, scoring logic, answer/question count mismatch
+- **Fact-check** — caching, verdict validation
+- **Checklist** — auth enforcement, default seeding, toggle
+- **Security** — auth required on protected routes, security headers present
+- **RAG** — KB loading, cosine similarity, cache key uniqueness
+
+---
+
+## Accessibility
+
+- All interactive elements have `aria-label` attributes.
+- `role="alert"` on error messages for screen-reader announcements.
+- `role="list"` / `role="listitem"` on search results.
+- Map container has `role="application"` and `aria-label`.
+- `SkipToContent` component allows keyboard users to skip navigation.
+- Focus ring (`focus:ring-2`) on all buttons and inputs.
+- Colour contrast meets WCAG AA for all text/background combinations.
+- Fully keyboard-navigable (Tab order follows visual flow).
+
+---
+
+## Google Services Integration
+
+| Service | How It's Used |
+|---------|---------------|
+| **Vertex AI – Gemini 1.5 Flash** | Streaming election chat, quiz question generation, fact-check verdict |
+| **Vertex AI – text-embedding-004** | Semantic embedding for RAG fact-checker |
+| **Google Maps JavaScript API** | Interactive polling booth map (`@vis.gl/react-google-maps`) |
+| **Google Places API (v1 Text Search)** | Finding nearby polling stations by coordinates |
+| **Google Geocoding API** | Converting typed addresses to lat/lng |
+| **Cloud Translation API v3** | Translating UI strings into 10 languages on-demand |
+
+---
+
+## Local Setup
 
 ### Prerequisites
-- Node 20+, Python 3.11+, Docker (optional)
-- Supabase project (free tier)
-- Google Cloud project with Vertex AI + Translation API + Maps API enabled
+- Python 3.12+
+- Node.js 20+
+- Google Cloud project with Vertex AI, Maps, Translation APIs enabled
+- Supabase project
 
-### Setup
-```bash
-# Clone and configure
-cp .env.example .env
-# Fill in .env with your Supabase and Google Cloud credentials
-
-# Option A: Docker Compose (recommended)
-docker-compose up
-
-# Option B: Manual
-cd backend && pip install -r requirements.txt && uvicorn main:app --reload &
-cd frontend && npm install && npm run dev
-```
-
-Open http://localhost:5173
-
-### Supabase Schema
-Run `supabase/migrations/20240101000000_init.sql` in your Supabase SQL Editor.
-
----
-
-## 🧪 Testing
+### Backend
 
 ```bash
-# Backend
-cd backend && pytest tests/ --cov=. --cov-report=term-missing
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # fill in your keys
+uvicorn main:app --reload
+```
 
-# Frontend
-cd frontend && npm test
+### Frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env  # fill in VITE_ keys
+npm run dev
+```
+
+### Docker Compose (full stack)
+
+```bash
+docker compose up --build
 ```
 
 ---
 
-## 📁 Project Structure
+## Environment Variables
 
-```
-electiq/
-├── frontend/               # Vite + React 18 + TypeScript
-│   ├── src/
-│   │   ├── components/     # ChatWindow, PhaseCard, ChecklistItem, QuizCard…
-│   │   ├── pages/          # Home, Timeline, Checklist, Maps, Quiz, FactCheck
-│   │   ├── hooks/          # useChatStream, useChecklist, useAuth
-│   │   ├── store/          # Zustand stores (chat, app)
-│   │   └── i18n/           # Translation bundles
-│   └── Dockerfile
-├── backend/                # FastAPI + Python 3.11
-│   ├── routers/            # chat, timeline, checklist, quiz, fact_check, translate, maps
-│   ├── services/           # vertex, rag, supabase_client, sanitise
-│   ├── models/             # Pydantic models
-│   ├── data/               # Static JSON (election phases, FAQ, quiz, i18n, KB)
-│   └── tests/              # pytest test suite
-├── supabase/
-│   └── migrations/         # SQL schema
-├── docker-compose.yml
-└── .env.example
-```
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SUPABASE_URL` | ✅ | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Service role key (backend only) |
+| `VERTEX_AI_PROJECT` | ✅ | GCP project ID |
+| `VERTEX_AI_LOCATION` | ✅ | Region (default: `us-central1`) |
+| `GOOGLE_APPLICATION_CREDENTIALS` | ✅ | Path to service account JSON |
+| `GOOGLE_MAPS_SERVER_KEY` | ✅ | Maps API key (server-side only) |
+| `ALLOWED_ORIGINS` | ✅ | Comma-separated CORS origins |
+| `GEMINI_MODEL` | ❌ | Override model (default: `gemini-1.5-flash`) |
 
 ---
 
-## 🔐 Security
+## Assumptions
 
-- ✅ API keys never in client — all Google Cloud credentials server-side only
-- ✅ Supabase RLS — anonymous users can only access their own rows
-- ✅ Input sanitisation — `bleach.clean()` before every AI call
-- ✅ Rate limiting — slowapi middleware on all AI endpoints
-- ✅ CORS — restricted to localhost:5173 only
-- ✅ Prompt injection guard — system prompt explicitly resists user instruction injection
-- ✅ No PII storage — geolocation used in-flight only, never persisted
+- Users are anonymous (no account required) — sessions are identified by Supabase anonymous auth JWTs.
+- The election data (phases, FAQ, misinformation KB, quiz questions) targets a general democratic election context and can be replaced with country-specific data.
+- The Google Maps search uses "polling station voting centre" as the text query — results will vary by country.
+- Translation is lazy (on first request) and cached for 24 hours to minimise API costs.
+- The quiz falls back to a local question bank if Vertex AI is unavailable.
 
 ---
 
-## ♿ Accessibility (WCAG 2.1 AA)
+## License
 
-- Full keyboard navigation with visible focus rings
-- ARIA live regions on chat stream and alerts
-- `prefers-reduced-motion` respected
-- Colour contrast ≥ 4.5:1 (axe-core verified in CI)
-- RTL layout for Arabic, Hebrew, Urdu
-- Screen-reader-first list view for Maps (alongside visual map)
-
----
-
-## 🛠️ Google Services
-
-1. **Vertex AI (Gemini 1.5 Pro / Flash)**
-   - **ElectIQ:** Used for the core streaming chatbot, quiz question generation, and misinformation fact-checking pipeline. It leverages the model's large context window to process election data and provide real-time, unbiased civic information.
-   - **FairLens (Fairlytics AI):** Utilized for generating AI-powered fairness remediation strategies and plain-language compliance summaries within the PDF audit reports. It translates complex metrics (SPD, EOD, DIR) into actionable insights for developers.
-
-2. **Google Cloud Run**
-   - This is the primary deployment and hosting service used for both projects. It hosts the containerized FastAPI backends and Vite/React frontends, providing a scalable and serverless environment for the applications.
-
-3. **Cloud Translation API**
-   - Used in the ElectIQ project to translate the platform's UI and chatbot responses into over 50+ languages, ensuring accessibility for a diverse voter base.
-
-4. **Google Maps Platform**
-   - Integrated into the ElectIQ project for the Polling Booth Locator feature, utilizing the Places API and Directions API to help users find their nearest voting stations.
-
----
-
-## 👥 Team
-
-Built solo for the **Hack2Skills × Google Hackathon 2026**.
-
----
-
-*ElectIQ — Every vote starts with understanding.*
+MIT — see `LICENSE`.
