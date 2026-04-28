@@ -13,7 +13,7 @@ from vertexai.generative_models import Content, Part
 
 router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 limiter = Limiter(key_func=get_remote_address)
-logger = logging.getLogger("electiq")
+logger = logging.getLogger(__name__)
 
 BADGES = {
     90: "🏆 Election Expert",
@@ -23,18 +23,54 @@ BADGES = {
 }
 
 
-def _fallback_questions():
+def _fallback_questions() -> list:
     p = pathlib.Path(__file__).parent.parent / "data" / "quiz_questions.json"
     qs = json.loads(p.read_text(encoding="utf-8"))
     return random.sample(qs, min(10, len(qs)))
 
 
+def _validate_questions(questions: list) -> list:
+    """
+    Validate AI-generated questions and drop any that are malformed.
+    Each valid question must have:
+      - "question": non-empty string
+      - "options": list of exactly 4 non-empty strings
+      - "correct": integer in [0, 3]
+      - "explanation": string (can be empty)
+    Returns the filtered list (raises ValueError if none survive).
+    """
+    valid = []
+    for i, q in enumerate(questions):
+        try:
+            if not isinstance(q, dict):
+                raise ValueError("not a dict")
+            if not isinstance(q.get("question"), str) or not q["question"].strip():
+                raise ValueError("missing question text")
+            opts = q.get("options")
+            if not isinstance(opts, list) or len(opts) != 4:
+                raise ValueError("options must be a list of 4 items")
+            if not all(isinstance(o, str) and o.strip() for o in opts):
+                raise ValueError("all options must be non-empty strings")
+            correct = q.get("correct")
+            if not isinstance(correct, int) or not (0 <= correct <= 3):
+                raise ValueError("correct index must be 0–3")
+            if not isinstance(q.get("explanation", ""), str):
+                raise ValueError("explanation must be a string")
+            valid.append(q)
+        except ValueError as exc:
+            logger.warning("[Quiz] Dropping question %d — %s", i, exc)
+
+    if not valid:
+        raise ValueError("No valid questions survived validation")
+    return valid
+
+
 GEN_PROMPT = (
     "Generate 10 multiple-choice quiz questions about democratic elections, "
     "voting procedures, and civic participation.\n"
-    "Return ONLY valid JSON array. Each object: "
+    "Return ONLY a valid JSON array. Each object: "
     '{"question": "...", "options": ["A","B","C","D"], "correct": 0, "explanation": "..."}\n'
-    "Correct index is 0-based. Make questions educational and non-partisan."
+    "correct is a 0-based index. Make questions educational and non-partisan."
 )
 
 
@@ -47,11 +83,14 @@ async def generate_questions(request: Request, session_id: str = Depends(verify_
             [Content(role="user", parts=[Part.from_text(GEN_PROMPT)])],
             generation_config={"response_mime_type": "application/json"},
         )
-        questions = json.loads(response.text)
-        if not isinstance(questions, list) or len(questions) < 5:
-            raise ValueError("Bad format")
-        return {"questions": questions[:10], "source": "ai"}
+        raw = json.loads(response.text)
+        if not isinstance(raw, list) or len(raw) < 5:
+            raise ValueError("AI returned fewer than 5 questions")
+        questions = _validate_questions(raw[:10])
+        logger.info("[Quiz] AI generated %d valid questions", len(questions))
+        return {"questions": questions, "source": "ai"}
     except Exception:
+        logger.exception("[Quiz] AI generation failed — falling back to static bank")
         return {"questions": _fallback_questions(), "source": "fallback"}
 
 
@@ -64,7 +103,10 @@ async def submit_quiz(body: QuizSubmission, session_id: str = Depends(verify_ses
     if len(body.answers) > len(body.questions):
         raise HTTPException(
             status_code=422,
-            detail=f"Answer count ({len(body.answers)}) exceeds question count ({len(body.questions)})",
+            detail=(
+                f"Answer count ({len(body.answers)}) exceeds "
+                f"question count ({len(body.questions)})"
+            ),
         )
 
     correct = sum(

@@ -1,4 +1,5 @@
 import logging
+import logging.config
 import os
 from contextlib import asynccontextmanager
 
@@ -14,10 +15,30 @@ from slowapi import Limiter, _rate_limit_exceeded_handler  # noqa: E402
 from slowapi.errors import RateLimitExceeded  # noqa: E402
 from slowapi.util import get_remote_address  # noqa: E402
 
+# ─── Logging configuration ────────────────────────────────────────────────────
+logging.config.dictConfig(
+    {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {
+                "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+                "datefmt": "%Y-%m-%dT%H:%M:%S",
+            }
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "default",
+            }
+        },
+        "root": {"level": "INFO", "handlers": ["console"]},
+    }
+)
+
 logger = logging.getLogger("electiq")
 
-
-# ─── Security headers middleware ─────────────────────────────────────────────
+# ─── Security headers ─────────────────────────────────────────────────────────
 SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
@@ -25,28 +46,25 @@ SECURITY_HEADERS = {
     "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
 }
 
+# ─── CORS origins from environment (never hard-coded) ────────────────────────
+_raw_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+ALLOWED_ORIGINS: list[str] = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Embed RAG knowledge base at startup
+    logger.info("[Startup] Initialising RAG knowledge base...")
     try:
         from services.rag import init_rag
 
         init_rag()
     except Exception:
-        import traceback
-
-        logger.warning(
-            "[RAG] Startup embedding failed. Check your GCP Console "
-            "(Vertex AI API enabled? Roles assigned?)"
+        logger.exception(
+            "[Startup] RAG embedding failed — check Vertex AI API enablement and IAM roles"
         )
-        traceback.print_exc()
     yield
+    logger.info("[Shutdown] ElectIQ API shutting down.")
 
-
-# ─── CORS origins from environment (never hard-coded) ────────────────────────
-_raw_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
-ALLOWED_ORIGINS: list[str] = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -61,6 +79,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ─── Inject security headers on every response ───────────────────────────────
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    for header, value in SECURITY_HEADERS.items():
+        response.headers[header] = value
+    return response
 
 
 # ─── Global exception handler — never leaks internal detail ──────────────────
@@ -80,15 +107,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# ─── Inject security headers on every response ───────────────────────────────
-@app.middleware("http")
-async def add_security_headers(request: Request, call_next):
-    response = await call_next(request)
-    for header, value in SECURITY_HEADERS.items():
-        response.headers[header] = value
-    return response
-
-
 # ─── Routers ─────────────────────────────────────────────────────────────────
 app.include_router(chat.router)
 app.include_router(timeline.router)
@@ -99,6 +117,27 @@ app.include_router(maps.router)
 app.include_router(quiz.router)
 
 
+# ─── Health & Readiness probes ───────────────────────────────────────────────
 @app.get("/health")
 def health():
+    """Liveness probe — always returns 200 if the process is alive."""
     return {"status": "ok"}
+
+
+@app.get("/ready")
+def ready():
+    """
+    Readiness probe — returns 200 only when the RAG knowledge base
+    has been successfully embedded at startup.
+    Returns 503 if the KB is empty (embedding failed).
+    """
+    from services.rag import kb_size
+
+    size = kb_size()
+    if size == 0:
+        logger.warning("[Ready] RAG KB is empty — not ready")
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "reason": "RAG knowledge base not loaded"},
+        )
+    return {"status": "ready", "kb_size": size}

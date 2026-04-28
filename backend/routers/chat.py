@@ -1,4 +1,5 @@
 import json
+import logging
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
@@ -11,6 +12,7 @@ from slowapi.util import get_remote_address
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger(__name__)
 
 STARTER_PROMPTS = [
     "How do I register to vote?",
@@ -63,8 +65,9 @@ async def chat_stream(
                 if chunk.text:
                     yield f'data: {json.dumps({"token": chunk.text})}\n\n'
             yield 'data: {"done": true}\n\n'
-        except Exception as e:
-            yield f'data: {json.dumps({"error": str(e), "done": True})}\n\n'
+        except Exception:
+            logger.exception("[Chat] Streaming error for session %s", session_id)
+            yield f'data: {json.dumps({"error": "AI service unavailable", "done": True})}\n\n'
 
     return StreamingResponse(
         generate(),

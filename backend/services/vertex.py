@@ -1,3 +1,4 @@
+import logging
 import os
 
 import vertexai
@@ -8,7 +9,10 @@ from vertexai.generative_models import (
     Part,
 )
 
+logger = logging.getLogger(__name__)
+
 _model: GenerativeModel | None = None
+_vertex_initialized: bool = False
 
 SYSTEM_PROMPT = (
     "You are ElectIQ, a helpful election information assistant. "
@@ -22,18 +26,29 @@ SYSTEM_PROMPT = (
 )
 
 
-def get_model() -> GenerativeModel:
-    global _model
-    if _model is None:
+def _ensure_vertex() -> None:
+    """Initialise the Vertex AI SDK exactly once per process."""
+    global _vertex_initialized
+    if not _vertex_initialized:
         vertexai.init(
             project=os.environ["VERTEX_AI_PROJECT"],
             location=os.environ.get("VERTEX_AI_LOCATION", "us-central1"),
         )
+        _vertex_initialized = True
+        logger.info("[Vertex] SDK initialised (project=%s)", os.environ["VERTEX_AI_PROJECT"])
+
+
+def get_model() -> GenerativeModel:
+    global _model
+    if _model is None:
+        _ensure_vertex()
+        model_name = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
         _model = GenerativeModel(
-            "gemini-1.5-flash",
+            model_name,
             system_instruction=SYSTEM_PROMPT,
             generation_config=GenerationConfig(max_output_tokens=512, temperature=0.3),
         )
+        logger.info("[Vertex] GenerativeModel loaded: %s", model_name)
     return _model
 
 
