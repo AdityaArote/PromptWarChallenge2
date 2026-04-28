@@ -57,8 +57,10 @@ SECURITY_HEADERS = {
 }
 
 # ─── CORS origins from environment (never hard-coded) ────────────────────────
-_raw_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
-ALLOWED_ORIGINS: list[str] = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+_raw_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173 http://127.0.0.1:5173")
+ALLOWED_ORIGINS: list[str] = [
+    o.strip() for o in _raw_origins.replace(",", " ").split(" ") if o.strip()
+]
 
 
 @asynccontextmanager
