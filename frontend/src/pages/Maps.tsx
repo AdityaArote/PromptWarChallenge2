@@ -9,7 +9,7 @@ interface BoothResult {
 
 export function Maps() {
   const [results, setResults] = useState<BoothResult[]>([])
-  const [center, setCenter] = useState({ lat: -33.8688, lng: 151.2093 }) // Sydney default
+  const [center, setCenter] = useState({ lat: 19.0330, lng: 73.0297 }) // Navi Mumbai default
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

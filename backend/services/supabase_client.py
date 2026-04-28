@@ -4,6 +4,7 @@ from functools import lru_cache
 from typing import Optional
 
 from fastapi import Header, HTTPException
+
 from supabase import Client, create_client
 
 logger = logging.getLogger(__name__)
@@ -32,8 +33,6 @@ async def verify_session(authorization: Optional[str] = Header(None)) -> str:
         client = get_supabase()
         user = client.auth.get_user(token)
         uid = user.user.id
-        # Ensure session exists in public.sessions to satisfy foreign key constraints
-        client.table("sessions").upsert({"id": uid}).execute()
         return uid
     except HTTPException:
         raise

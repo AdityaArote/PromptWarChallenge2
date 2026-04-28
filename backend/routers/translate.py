@@ -1,10 +1,14 @@
 import json
+import logging
 import os
 import pathlib
 
 from cachetools import TTLCache
 from fastapi import APIRouter
 from google.cloud import translate_v3
+
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter(prefix="/api/translate", tags=["translate"])
 _cache: TTLCache = TTLCache(maxsize=100, ttl=86400)
@@ -35,22 +39,34 @@ async def get_bundle(lang: str = "en"):
         return _cache[lang]
 
     base = _get_base_strings()
-    project = os.environ["VERTEX_AI_PROJECT"]
-    client = _get_client()
-    parent = f"projects/{project}/locations/global"
 
-    translated = {}
-    for key, val in base.items():
-        resp = client.translate_text(
-            request={
-                "parent": parent,
-                "contents": [val],
-                "target_language_code": lang,
-                "source_language_code": "en",
-                "mime_type": "text/plain",
-            }
+    project = os.environ.get("VERTEX_AI_PROJECT")
+    if not project:
+        # No GCP project configured — return English strings as fallback
+        return base
+
+    try:
+        client = _get_client()
+        parent = f"projects/{project}/locations/global"
+
+        translated = {}
+        for key, val in base.items():
+            resp = client.translate_text(
+                request={
+                    "parent": parent,
+                    "contents": [val],
+                    "target_language_code": lang,
+                    "source_language_code": "en",
+                    "mime_type": "text/plain",
+                }
+            )
+            translated[key] = resp.translations[0].translated_text
+
+        _cache[lang] = translated
+        return translated
+    except Exception:
+        logger.warning(
+            "[translate] Cloud Translation failed for lang=%s — returning English fallback", lang
         )
-        translated[key] = resp.translations[0].translated_text
-
-    _cache[lang] = translated
-    return translated
+        # Return English strings so the frontend can still render meaningfully
+        return base
