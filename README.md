@@ -141,6 +141,23 @@ electiq/
 
 ---
 
+## 🛠️ Google Services
+
+1. **Vertex AI (Gemini 1.5 Pro / Flash)**
+   - **ElectIQ:** Used for the core streaming chatbot, quiz question generation, and misinformation fact-checking pipeline. It leverages the model's large context window to process election data and provide real-time, unbiased civic information.
+   - **FairLens (Fairlytics AI):** Utilized for generating AI-powered fairness remediation strategies and plain-language compliance summaries within the PDF audit reports. It translates complex metrics (SPD, EOD, DIR) into actionable insights for developers.
+
+2. **Google Cloud Run**
+   - This is the primary deployment and hosting service used for both projects. It hosts the containerized FastAPI backends and Vite/React frontends, providing a scalable and serverless environment for the applications.
+
+3. **Cloud Translation API**
+   - Used in the ElectIQ project to translate the platform's UI and chatbot responses into over 50+ languages, ensuring accessibility for a diverse voter base.
+
+4. **Google Maps Platform**
+   - Integrated into the ElectIQ project for the Polling Booth Locator feature, utilizing the Places API and Directions API to help users find their nearest voting stations.
+
+---
+
 ## 👥 Team
 
 Built solo in 48 hours for the **Hack2Skills × Google Hackathon 2025**.
